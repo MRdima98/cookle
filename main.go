@@ -4,23 +4,25 @@ import (
 	"context"
 	"fmt"
 	"html/template"
-
-	// "html/template"
 	"log"
 	"net/http"
-
 	"os"
 
 	"github.com/jackc/pgx/v5"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 const (
 	index = "index.html"
+	url   = "DB_URL"
 )
 
 var tmpl = template.Must(template.ParseFiles(index))
 
 func main() {
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	http.HandleFunc("/", handler)
 	// http.HandleFunc("/execute", handlerExecute)
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -39,8 +41,7 @@ type Recipe struct {
 }
 
 func getRecipe() Recipe {
-	urlExample := "postgres://dima:dima@localhost:5432/food"
-	conn, err := pgx.Connect(context.Background(), urlExample)
+	conn, err := pgx.Connect(context.Background(), os.Getenv(url))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
