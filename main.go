@@ -31,7 +31,7 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	c := cron.New(cron.WithSeconds())
-	c.AddFunc("@every 1m", func() { todaysRecipe = rand.Intn(maxOffset) })
+	c.AddFunc("@every 10s", func() { todaysRecipe = rand.Intn(maxOffset) })
 	c.Start()
 
 	http.HandleFunc("/", handler)
@@ -69,7 +69,9 @@ func getRecipe() Recipe {
 	defer conn.Close(context.Background())
 
 	var recipe Recipe
-	err = conn.QueryRow(context.Background(), "select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes limit 1 offset "+strconv.Itoa(todaysRecipe)+";").
+	fmt.Println(todaysRecipe)
+	fmt.Println("select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes order by id limit 1 offset " + strconv.Itoa(todaysRecipe) + ";")
+	err = conn.QueryRow(context.Background(), "select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes order by id limit 1 offset "+strconv.Itoa(todaysRecipe)+";").
 		Scan(
 			&recipe.Name, &recipe.Minutes, &recipe.Submitted, &recipe.Tags,
 			&recipe.Nutrition, &recipe.N_steps, &recipe.Steps, &recipe.Description, &recipe.Ingredients, &recipe.N_ingredients,
