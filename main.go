@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/jackc/pgx/v5"
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/robfig/cron/v3"
 )
 
 const (
@@ -19,10 +22,17 @@ const (
 )
 
 var tmpl = template.Must(template.ParseFiles(index))
+var todaysRecipe int
+var maxOffset int
 
 func main() {
+	getMaxRows()
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
+	c := cron.New(cron.WithSeconds())
+	c.AddFunc("@every 1m", func() { todaysRecipe = rand.Intn(maxOffset) })
+	c.Start()
 
 	http.HandleFunc("/", handler)
 	// http.HandleFunc("/execute", handlerExecute)
@@ -59,16 +69,26 @@ func getRecipe() Recipe {
 	defer conn.Close(context.Background())
 
 	var recipe Recipe
-	err = conn.QueryRow(context.Background(), "select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes limit 1;").
+	err = conn.QueryRow(context.Background(), "select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes limit 1 offset "+strconv.Itoa(todaysRecipe)+";").
 		Scan(
 			&recipe.Name, &recipe.Minutes, &recipe.Submitted, &recipe.Tags,
-			&recipe.Nutrition, &recipe.N_steps, &recipe.Steps, &recipe.Description,
-			&recipe.Ingredients, &recipe.N_ingredients,
+			&recipe.Nutrition, &recipe.N_steps, &recipe.Steps, &recipe.Description, &recipe.Ingredients, &recipe.N_ingredients,
 		)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
 	}
 
 	return recipe
+}
+
+func getMaxRows() {
+	conn, err := pgx.Connect(context.Background(), os.Getenv(url))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
+	}
+	defer conn.Close(context.Background())
+
+	err = conn.QueryRow(context.Background(), "select count(*) from recipes;").
+		Scan(&maxOffset)
 }
