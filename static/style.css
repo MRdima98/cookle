@@ -554,7 +554,46 @@ video {
   --tw-contain-style:  ;
 }
 
-.bg-gray-500 {
+.flex {
+  display: flex;
+}
+
+.w-10\/12 {
+  width: 83.333333%;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-start {
+  align-items: flex-start;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.bg-mainBg {
   --tw-bg-opacity: 1;
-  background-color: rgb(107 114 128 / var(--tw-bg-opacity));
+  background-color: rgb(34 40 49 / var(--tw-bg-opacity));
+}
+
+.bg-secondaryBg {
+  --tw-bg-opacity: 1;
+  background-color: rgb(49 54 63 / var(--tw-bg-opacity));
+}
+
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.text-text {
+  --tw-text-opacity: 1;
+  color: rgb(238 238 238 / var(--tw-text-opacity));
 }

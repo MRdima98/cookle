@@ -27,6 +27,13 @@ type query struct {
 	n_ingredients  int
 }
 
+const (
+	EMPTY_LINE = -1
+	TOO_SHORT  = 200
+	SKIP_COMMA = 3
+	EMPTY_DESC = 2
+)
+
 func (q query) getString() string {
 
 	// 	insert := `
@@ -120,67 +127,59 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 	var query query
-	line_numba := 1
+	var full_statement string
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		line_numba++
-		if len(line) < 2 {
+		full_statement += line
+		idx := strings.LastIndex(full_statement, ",")
+
+		if idx == EMPTY_LINE {
+			fmt.Println("There is no comma!")
 			continue
 		}
-		fmt.Println("line ", line_numba, " :", line[len(line)-2:])
-		_, err := strconv.Atoi(line[len(line)-2:])
-		if err != nil {
+
+		if len(line) == TOO_SHORT {
+			fmt.Println("too short")
 			continue
 		}
-		query.name, line, err = parse(line)
+
+		n_steps, err := strconv.Atoi(full_statement[idx+1:])
+
 		if err != nil {
-			fmt.Println(err)
-		}
-		query.id, line, err = parseNumber(line)
-		if err != nil {
-			fmt.Println(err)
-		}
-		query.minutes, line, err = parseNumber(line)
-		if err != nil {
-			fmt.Println(err)
-		}
-		query.contributor_id, line, err = parseNumber(line)
-		if err != nil {
-			fmt.Println(err)
-		}
-		query.submitted, line, err = parse(line)
-		if err != nil {
-			fmt.Println(err)
-		}
-		query.tags, line, err = parseArray(line)
-		if err != nil {
-			fmt.Println("array in shambles")
-		}
-		query.nutrition, line, err = parseArray(line)
-		if err != nil {
-			fmt.Println("array in shambles")
-		}
-		query.n_steps, line, err = parseNumber(line)
-		if err != nil {
-			fmt.Println(err)
-		}
-		query.steps, line, err = parseArray(line)
-		if err != nil {
-			fmt.Println("array in shambles")
-		}
-		query.description, line, err = parseDescription(line)
-		if err != nil {
+			fmt.Printf("This is not a number, full statement: %v\n\n", full_statement[idx+1:])
 			continue
 		}
-		query.ingredients, line, err = parseArray(line)
-		if err != nil {
-			fmt.Println("array in shambles")
-		}
+
+		line = full_statement
+		full_statement = ""
+		fmt.Printf("Congrats you have a full line, here's the steps: %v, len: %v\n\n", n_steps, len(line))
+
+		fmt.Println("name")
+		query.name, line = parse(line)
+		fmt.Println("\n\nid")
+		query.id, line = parseNumber(line)
+		fmt.Println("\n\nminutes")
+		query.minutes, line = parseNumber(line)
+		fmt.Println("\n\ncontributor_id")
+		query.contributor_id, line = parseNumber(line)
+		fmt.Println("\n\nsubmitted")
+		query.submitted, line = parse(line)
+		fmt.Println("\n\ntags")
+		query.tags, line = parseArray(line)
+		fmt.Println("\n\nnutrition")
+		query.nutrition, line = parseArray(line)
+		fmt.Println("\n\nn_steps")
+		query.n_steps, line = parseNumber(line)
+		fmt.Println("\n\nsteps")
+		query.steps, line = parseArray(line)
+		fmt.Println("\n\ndescription")
+		query.description, line = parseDescription(line)
+		fmt.Println("\n\ningredients")
+		query.ingredients, line = parseArray(line)
+		fmt.Println("\n\nn_ingredients")
 		query.n_ingredients, err = strconv.Atoi(line)
-		if err != nil {
-			fmt.Println("no numnba")
-		}
+
 		_, err = conn.Exec(context.Background(), query.getString(),
 			query.name, query.id, query.minutes, query.contributor_id,
 			query.submitted, query.tags, query.nutrition, query.n_steps, query.steps,
@@ -191,54 +190,47 @@ func main() {
 		}
 	}
 
-	// fmt.Println(query)
+	fmt.Println(query)
 }
 
-func parseNumber(line string) (int, string, error) {
+func parseNumber(line string) (int, string) {
 	comma := strings.Index(line, ",")
-	if comma == -1 {
-		return 0, "", fmt.Errorf("nope")
-	}
-	num, err := strconv.Atoi(line[:comma])
+	value := line[:comma]
+	fmt.Printf("\nI'm parsing a NUMBER in this string value: %v", value)
+	num, err := strconv.Atoi(value)
 	if err != nil {
-		fmt.Println("Not a numba", err)
-		return 0, "", fmt.Errorf("numbers imma right?")
+		fmt.Println("\nNot a numba", err)
 	}
-	return num, line[comma+1:], nil
+	fmt.Print("\nline: ", line)
+	return num, line[comma+1:]
 }
 
-func parse(line string) (string, string, error) {
+func parse(line string) (string, string) {
 	comma := strings.Index(line, ",")
-	if comma == -1 {
-		return "", "", fmt.Errorf("guess nothing")
-	}
-	return line[:comma], line[comma+1:], nil
+	value := line[:comma]
+	fmt.Printf("I'm parsing a STRING in this string value: %v", value)
+	return value, line[comma+1:]
 }
 
-func parseDescription(line string) (string, string, error) {
+func parseDescription(line string) (string, string) {
 	comma := strings.Index(line, "[")
-	if comma < 1 {
-		return "", "", fmt.Errorf("not 0")
+	if comma <= EMPTY_DESC {
+		return "", line[comma-1:]
 	}
-	return line[1 : comma-3], line[comma-1:], nil
+	value := line[1 : comma-3]
+	fmt.Printf("\n\nI'm parsing a DESC in this string value: %v\n\n", value)
+	return value, line[comma-1:]
 }
 
-func parseArray(line string) (string, string, error) {
+func parseArray(line string) (string, string) {
 	comma := strings.Index(line, "]")
-	if comma == -1 {
-		return "", "", fmt.Errorf("nothing")
-	}
 	array := line[:comma+2]
+	fmt.Printf("I'm parsing a ARRAY in this string value: %v", array)
+
 	array = strings.Replace(array, "[", "{", 1)
 	array = strings.Replace(array, "]", "}", 1)
-	// array = strings.ReplaceAll(array, "'", "\"")
-	// array = "'" + array[1:]
-	// array = array[:len(array)-1] + "'"
-	// fmt.Println("array: ", array)
-	if len(array)-1 <= 0 {
-		return "", "", fmt.Errorf("asdfasdf")
-	}
 	array = array[1:]
 	array = array[:len(array)-1]
-	return array, line[comma+1:], nil
+
+	return array, line[comma+SKIP_COMMA:]
 }

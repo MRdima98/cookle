@@ -8,9 +8,47 @@
     <title>Document</title>
 </head>
 
-<body class="bg-gray-500">
-
+<body class="bg-mainBg text-text flex flex-col gap-1 items-center">
+    <header class="w-10/12">
+        <h1 class="text-2xl">
+            {{.Name}}
+        </h1>
+    </header>
+    <span class="w-10/12">
+        Time:
+        {{.Minutes}}
+    </span>
+    <span class="w-10/12">
+        Submited:
+        {{.Submitted}}
+    </span>
+    <!--<span>-->
+    <!--    {{.Nutrition}}-->
+    <!--</span>-->
+    <span class="w-10/12">
+        {{.N_steps}}
+    </span>
+    <main class="flex flex-col gap-1 bg-secondaryBg items-start w-10/12">
+        {{range $i, $step := .Steps}}
+        <p>
+            {{$step}}
+        </p>
+        {{end}}
+    </main>
+    <p class="w-10/12">
+        {{.Description}}
+    </p>
+    We have to use: {{.N_ingredients}}
+    {{range $i, $ingredient := .Ingredients}}
+    <span class="w-10/12">
+        {{$ingredient}}
+    </span>
+    {{end}}
+    <span class="w-10/12">
+        {{range $i, $tag := .Tags}}
+        #{{index $tag }}
+        {{end}}
+    </span>
 </body>
 
 </html>
-{{.Name}}

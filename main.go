@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	_ "github.com/joho/godotenv/autoload"
@@ -37,7 +38,16 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 type Recipe struct {
-	Name string
+	Name          string
+	Minutes       int
+	Submitted     time.Time
+	Tags          []string
+	Nutrition     string
+	N_steps       int
+	Steps         []string
+	Description   string
+	Ingredients   []string
+	N_ingredients int
 }
 
 func getRecipe() Recipe {
@@ -49,7 +59,12 @@ func getRecipe() Recipe {
 	defer conn.Close(context.Background())
 
 	var recipe Recipe
-	err = conn.QueryRow(context.Background(), "select name from recipes limit 1;").Scan(&recipe.Name)
+	err = conn.QueryRow(context.Background(), "select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes limit 1;").
+		Scan(
+			&recipe.Name, &recipe.Minutes, &recipe.Submitted, &recipe.Tags,
+			&recipe.Nutrition, &recipe.N_steps, &recipe.Steps, &recipe.Description,
+			&recipe.Ingredients, &recipe.N_ingredients,
+		)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
 		os.Exit(1)
