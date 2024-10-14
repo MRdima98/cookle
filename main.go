@@ -31,7 +31,8 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 	c := cron.New(cron.WithSeconds())
-	c.AddFunc("@every 10s", func() { todaysRecipe = rand.Intn(maxOffset) })
+	c.AddFunc("CRON_TZ=Italy/Rome 00 00 * * *", func() { todaysRecipe = rand.Intn(maxOffset) })
+
 	c.Start()
 
 	http.HandleFunc("/", handler)
