@@ -37,6 +37,7 @@ func main() {
 
 	http.HandleFunc("/", handler)
 	// http.HandleFunc("/execute", handlerExecute)
+	fmt.Println("Starting service on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 

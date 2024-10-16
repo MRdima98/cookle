@@ -1,0 +1,22 @@
+name: Deploy
+on:
+  push:
+    tags: 
+      - v**
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps: 
+    - uses: D3rHase/ssh-command-action@latest
+      with:
+        host: ${{ secrets.HOST }}
+        user: ${{ secrets.USER }}
+        private_key: ${{ secrets.PRIVATE_KEY }}
+        command: |
+          cd cookle;
+          git pull;
+          docker kill $(docker ps | grep food-app | awk '{ print $1 }');
+          docker build --tag food-app .;
+          docker run -d -p 8081:8080 code-server
