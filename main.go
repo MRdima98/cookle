@@ -26,6 +26,7 @@ var todaysRecipe int
 var maxOffset int
 
 func main() {
+	fmt.Println("Running main")
 	getMaxRows()
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
@@ -38,7 +39,7 @@ func main() {
 	http.HandleFunc("/", handler)
 	// http.HandleFunc("/execute", handlerExecute)
 	fmt.Println("Starting service on port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -95,4 +96,8 @@ func getMaxRows() {
 
 	err = conn.QueryRow(context.Background(), "select count(*) from recipes;").
 		Scan(&maxOffset)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Unable to get my query off: %v\n", err)
+		os.Exit(1)
+	}
 }
