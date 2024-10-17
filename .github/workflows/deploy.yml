@@ -19,4 +19,5 @@ jobs:
           git pull;
           docker kill $(docker ps | grep food-app | awk '{ print $1 }');
           docker build --tag food-app .;
-          docker run -d -p 8081:8080 code-server
+          docker run -d -p 8081:8080 food-app
+          docker rmi -f $(docker images -f "dangling=true" -q)
