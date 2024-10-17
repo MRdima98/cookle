@@ -14,7 +14,7 @@ jobs:
         host: ${{ secrets.HOST }}
         user: ${{ secrets.USER }}
         private_key: ${{ secrets.PRIVATE_KEY }}
-        command:
+        command: |
           cd cookle;
           git pull;
           docker kill $(docker ps | grep food-app | awk '{ print $1 }');
