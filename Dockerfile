@@ -13,5 +13,5 @@ WORKDIR /app
 COPY --from=0 /app/index.html /app/index.html
 COPY --from=0 /app/.env /app/.env
 COPY --from=0 /server /server
-EXPOSE 8080
+EXPOSE 8081
 CMD ["/server"]
