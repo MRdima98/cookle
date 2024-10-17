@@ -14,10 +14,10 @@ jobs:
         host: ${{ secrets.HOST }}
         user: ${{ secrets.USER }}
         private_key: ${{ secrets.PRIVATE_KEY }}
-        command: |
+        command:
           cd cookle;
           git pull;
           docker kill $(docker ps | grep food-app | awk '{ print $1 }');
           docker build --tag food-app .;
-          docker run -d -p 8081:8080 food-app
+          docker run -d -p 8081:8080 food-app;
           docker rmi -f $(docker images -f "dangling=true" -q)
