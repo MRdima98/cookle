@@ -28,17 +28,18 @@ var maxOffset int
 func main() {
 	fmt.Println("Running main")
 	getMaxRows()
+	todaysRecipe = rand.Intn(maxOffset)
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	c := cron.New(cron.WithSeconds())
-	c.AddFunc("CRON_TZ=Italy/Rome 00 00 * * *", func() { todaysRecipe = rand.Intn(maxOffset) })
+	c := cron.New()
+	c.AddFunc("00 00 * * *", func() {
+		todaysRecipe = rand.Intn(maxOffset)
+	})
 
 	c.Start()
 
 	http.HandleFunc("/", handler)
-	// http.HandleFunc("/execute", handlerExecute)
-	// http.HandleFunc("/execute", handlerExecute)
 	// http.HandleFunc("/execute", handlerExecute)
 	fmt.Println("Starting service on port 8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
