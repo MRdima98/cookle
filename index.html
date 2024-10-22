@@ -5,50 +5,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="./static/style.css">
-    <title>Document</title>
+    <title>Cookle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inspiration&display=swap" rel="stylesheet">
+    <script src="./static/js/index.js"></script>
 </head>
 
-<body class="bg-mainBg text-text flex flex-col gap-1 items-center">
-    <header class="w-10/12">
-        <h1 class="text-2xl">
-            {{.Name}}
+<body class="bg-mainBg text-text flex flex-col gap-5 items-center">
+    <header class="w-10/12 flex justify-between mt-5">
+        <h1 class="text-5xl ispirational inspiration-regular">
+            Cookle
         </h1>
+        <img id="menu-button" src="static/icons/menu.svg" alt="exchange icon" width="48" height="48">
     </header>
-    <span class="w-10/12">
-        Time:
-        {{.Minutes}}
-    </span>
-    <span class="w-10/12">
-        Submited:
-        {{.Submitted}}
-    </span>
-    <!--<span>-->
-    <!--    {{.Nutrition}}-->
-    <!--</span>-->
-    <span class="w-10/12">
-        {{.N_steps}}
-    </span>
+    <div class="w-10/12 flex flex-col gap-1">
+        <h2 class="text-2xl flex justify-center">
+            {{.Recipe.Name}}
+        </h2>
+        <span class="">
+            Time:
+            {{.Recipe.Minutes}} minutes
+        </span>
+        <p class="w-10/12">
+            Description: <br />
+            {{.Recipe.Description}}
+        </p>
+        <span>
+            Ingredients:
+            {{range $_, $ingredient := .Recipe.Ingredients}}
+            {{$ingredient}},
+            {{end}}
+        </span>
+        <span class="w-10/12">
+            Number of steps:
+            {{.Recipe.N_steps}}
+        </span>
+    </div>
     <main class="flex flex-col gap-1 bg-secondaryBg items-start w-10/12">
-        {{range $i, $step := .Steps}}
+        {{range $i, $step := .Recipe.Steps}}
         <p>
             {{$step}}
         </p>
         {{end}}
     </main>
-    <p class="w-10/12">
-        {{.Description}}
-    </p>
-    We have to use: {{.N_ingredients}}
-    {{range $i, $ingredient := .Ingredients}}
-    <span class="w-10/12">
-        {{$ingredient}}
-    </span>
-    {{end}}
-    <span class="w-10/12">
-        {{range $i, $tag := .Tags}}
-        #{{index $tag }}
-        {{end}}
-    </span>
+    <hr class="h-[1px] bg-white w-full" />
+    <footer class="w-10/12 flex justify-around">
+        <div class="flex flex-col items-center gap-1">
+            <h3 class="text-xl font-bold">Contacts</h3>
+            <a href="https://www.linkedin.com/in/dumitru-frunza-458494217/">
+                <img src="static/icons/linkedin.svg" alt="linkedin icon" width="36" height="36">
+            </a>
+            <a href="https://github.com/MRdima98/">
+                <img src="static/icons/github.svg" alt="github icon" width="36" height="36">
+            </a>
+        </div>
+        <div class="flex flex-col items-center gap-1">
+            <h3 class="text-xl font-bold">Navigation</h3>
+            <a>Home</a>
+            <!--<p>link2</p>-->
+            <!--<p>link2</p>-->
+            <!--<p>link2</p>-->
+        </div>
+    </footer>
+    <div id="menu"
+        class="w-[300px] h-[900px] bg-secondaryBg absolute top-0 right-0 flex flex-col items-center gap-3 invisible">
+        <a href="{{.Home_page}}" class="mt-10 text-5xl">Home</a>
+        <!--<span>Home</span>-->
+        <!--<span>Home</span>-->
+        <!--<span>Home</span>-->
+    </div>
 </body>
 
 </html>

@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.inspiration-regular {
+  font-family: "Inspiration", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+

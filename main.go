@@ -17,8 +17,9 @@ import (
 )
 
 const (
-	index = "index.html"
-	url   = "DB_URL"
+	index     = "index.html"
+	url       = "DB_URL"
+	home_page = "HOME_PAGE"
 )
 
 var tmpl = template.Must(template.ParseFiles(index))
@@ -47,7 +48,11 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	recipe := getRecipe()
-	err := tmpl.ExecuteTemplate(w, index, recipe)
+	err := tmpl.ExecuteTemplate(w, index,
+		struct {
+			Recipe    Recipe
+			Home_page string
+		}{recipe, os.Getenv(home_page)})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
