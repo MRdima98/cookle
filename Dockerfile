@@ -12,6 +12,7 @@ FROM scratch
 WORKDIR /app
 COPY --from=0 /app/index.html /app/index.html
 COPY --from=0 /app/.env /app/.env
-COPY --from=0 /server /server
+COPY --from=0 /app/static /app/static
+COPY --from=0 /server /app/server
 EXPOSE 8081
-CMD ["/server"]
+CMD ["/app/server"]
