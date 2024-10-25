@@ -17,12 +17,17 @@ import (
 )
 
 const (
-	index     = "index.html"
-	url       = "DB_URL"
-	home_page = "HOME_PAGE"
+	index       = "index.html"
+	layout      = "layout.html"
+	index_path  = "templates/index.html"
+	layout_path = "templates/layout.html"
+	footer_path = "templates/footer.html"
+	head_path   = "templates/head.html"
+	url         = "DB_URL"
+	home_page   = "HOME_PAGE"
 )
 
-var tmpl = template.Must(template.ParseFiles(index))
+var tmpl = template.Must(template.ParseFiles(index_path, layout_path, head_path, footer_path))
 var todaysRecipe int
 var maxOffset int
 
