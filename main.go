@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
@@ -18,23 +19,23 @@ import (
 
 const (
 	index       = "index.html"
-	layout      = "layout.html"
 	index_path  = "templates/index.html"
-	layout_path = "templates/layout.html"
 	footer_path = "templates/footer.html"
 	head_path   = "templates/head.html"
 	url         = "DB_URL"
 	home_page   = "HOME_PAGE"
 )
 
-var tmpl = template.Must(template.ParseFiles(index_path, layout_path, head_path, footer_path))
+var tmpl = template.Must(template.ParseFiles(index_path, head_path, footer_path))
 var todaysRecipe int
 var maxOffset int
 
 func main() {
 	fmt.Println("Running main")
-	getMaxRows()
-	todaysRecipe = rand.Intn(maxOffset)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	getMaxRows(ctx)
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
@@ -52,7 +53,7 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	recipe := getRecipe()
+	recipe := getRecipe(r.Context())
 	err := tmpl.ExecuteTemplate(w, index,
 		struct {
 			Recipe    Recipe
@@ -76,18 +77,14 @@ type Recipe struct {
 	N_ingredients int
 }
 
-func getRecipe() Recipe {
-	conn, err := pgx.Connect(context.Background(), os.Getenv(url))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-	defer conn.Close(context.Background())
+func getRecipe(ctx context.Context) Recipe {
+	conn := connectToDb(ctx)
+	defer conn.Close(ctx)
 
 	var recipe Recipe
 	fmt.Println(todaysRecipe)
 	fmt.Println("select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes order by id limit 1 offset " + strconv.Itoa(todaysRecipe) + ";")
-	err = conn.QueryRow(context.Background(), "select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes order by id limit 1 offset "+strconv.Itoa(todaysRecipe)+";").
+	err := conn.QueryRow(ctx, "select name, minutes, submitted, tags, nutrition, n_steps,steps, description, ingredients, n_ingredients from recipes order by id limit 1 offset "+strconv.Itoa(todaysRecipe)+";").
 		Scan(
 			&recipe.Name, &recipe.Minutes, &recipe.Submitted, &recipe.Tags,
 			&recipe.Nutrition, &recipe.N_steps, &recipe.Steps, &recipe.Description, &recipe.Ingredients, &recipe.N_ingredients,
@@ -99,18 +96,43 @@ func getRecipe() Recipe {
 	return recipe
 }
 
-func getMaxRows() {
-	conn, err := pgx.Connect(context.Background(), os.Getenv(url))
+func getMaxRows(ctx context.Context) {
+	conn := connectToDb(ctx)
+	defer conn.Close(ctx)
+
+	err := conn.QueryRow(ctx, "select recipes_offset from dailies where date(created_at) = CURRENT_DATE;").
+		Scan(&todaysRecipe)
+	fmt.Println(todaysRecipe)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Dailies: Unable to get my query off: %v\n", err)
+	}
+
+	err = conn.QueryRow(ctx, "select count(id) from recipes;").
+		Scan(&maxOffset)
+
+	if todaysRecipe == 0 {
+		todaysRecipe = rand.Intn(maxOffset)
+		cmd, err := conn.Exec(ctx, "INSERT INTO dailies (recipes_offset) VALUES ($1)", todaysRecipe)
+		cmd.Insert()
+
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Can't insert: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		err = conn.QueryRow(ctx, "select recipes_offset from dailies;").
+			Scan(&todaysRecipe)
+	}
+
+}
+
+func connectToDb(ctx context.Context) *pgx.Conn {
+	conn, err := pgx.Connect(ctx, os.Getenv(url))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer conn.Close(context.Background())
 
-	err = conn.QueryRow(context.Background(), "select count(*) from recipes;").
-		Scan(&maxOffset)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to get my query off: %v\n", err)
-		os.Exit(1)
-	}
+	return conn
 }
