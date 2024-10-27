@@ -18,15 +18,21 @@ import (
 )
 
 const (
-	index       = "index.html"
-	index_path  = "templates/index.html"
-	footer_path = "templates/footer.html"
-	head_path   = "templates/head.html"
-	url         = "DB_URL"
-	home_page   = "HOME_PAGE"
+	index         = "index.html"
+	pictures      = "pictures.html"
+	index_path    = "templates/index.html"
+	footer_path   = "templates/footer.html"
+	head_path     = "templates/head.html"
+	header_path   = "templates/header.html"
+	pictures_path = "templates/pictures.html"
+	url           = "DB_URL"
+	home_page     = "HOME_PAGE"
+	pictures_page = "PICTURES_PAGE"
 )
 
-var tmpl = template.Must(template.ParseFiles(index_path, head_path, footer_path))
+var tmpl = template.Must(template.ParseFiles(
+	index_path, head_path, footer_path, pictures_path, header_path),
+)
 var todaysRecipe int
 var maxOffset int
 
@@ -47,7 +53,9 @@ func main() {
 	c.Start()
 
 	http.HandleFunc("/", handler)
-	// http.HandleFunc("/execute", handlerExecute)
+	http.HandleFunc("/pictures", handlerPictures)
+	http.HandleFunc("/save_picture", handlerSavePicture)
+
 	fmt.Println("Starting service on port 8081")
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
@@ -56,9 +64,36 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	recipe := getRecipe(r.Context())
 	err := tmpl.ExecuteTemplate(w, index,
 		struct {
-			Recipe    Recipe
-			Home_page string
-		}{recipe, os.Getenv(home_page)})
+			Recipe        Recipe
+			Home_page     string
+			Pictures_page string
+		}{recipe, os.Getenv(home_page), os.Getenv(pictures_page)})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func handlerPictures(w http.ResponseWriter, r *http.Request) {
+	err := tmpl.ExecuteTemplate(w, pictures, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func handlerSavePicture(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "You cheeky fellow!", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Error parsing form", http.StatusBadRequest)
+		return
+	}
+
+	fmt.Println(r.FormValue("myFile"))
+
+	err := tmpl.ExecuteTemplate(w, pictures, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
