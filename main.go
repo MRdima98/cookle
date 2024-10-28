@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -82,7 +84,7 @@ func handlerPictures(w http.ResponseWriter, r *http.Request) {
 
 func handlerSavePicture(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "You cheeky fellow!", http.StatusMethodNotAllowed)
+		http.Error(w, "This is a POST method you pirate!", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -91,9 +93,52 @@ func handlerSavePicture(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(r.FormValue("myFile"))
+	conn := connectToDb(r.Context())
+	defer conn.Close(r.Context())
 
-	err := tmpl.ExecuteTemplate(w, pictures, nil)
+	cmd, err := conn.Exec(
+		r.Context(),
+		"INSERT INTO pictures (user_id, path) VALUES ($1, $2)", 1, ".",
+	)
+	if err != nil {
+		http.Error(w, "Insert err: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	cmd.Insert()
+
+	var fileId int
+	err = conn.QueryRow(r.Context(), "SELECT id FROM pictures WHERE user_id="+"1"+" ORDER BY id DESC LIMIT 1").Scan(&fileId)
+
+	fileName := strconv.Itoa(fileId)
+
+	formFile, _, err := r.FormFile("myFile")
+	if err != nil {
+		http.Error(w, "Form file: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer formFile.Close()
+
+	filePath := filepath.Join("./public/pictures", fileName)
+	dst, err := os.Create(filePath)
+	if err != nil {
+		http.Error(w, "Creation err: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, formFile); err != nil {
+		http.Error(w, "Copy error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	cmd, err = conn.Exec(r.Context(), "UPDATE pictures SET (path, updated_at) = ($1, CURRENT_TIMESTAMP) where id=$2", filePath, fileName)
+	if err != nil {
+		http.Error(w, "Insert err: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	cmd.Update()
+
+	err = tmpl.ExecuteTemplate(w, pictures, nil)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

@@ -1,12 +1,9 @@
 {{ template "head.html" .}}
 <div id="body" class="flex flex-col gap-5 items-center lg:w-8/12">
     {{ template "header.html" .}}
-    <form action="save_picture" method="post">
+    <form action="save_picture" method="post" enctype="multipart/form-data">
         <input type="file" id="file" name="myFile" />
         <button>save</button>
     </form>
-
-
-    picture this!
 </div>
 {{ template "footer.html" .}}
