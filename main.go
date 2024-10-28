@@ -46,6 +46,8 @@ func main() {
 	getMaxRows(ctx)
 	fs := http.FileServer(http.Dir("./static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
+	fs = http.FileServer(http.Dir("./public"))
+	http.Handle("/public/", http.StripPrefix("/public/", fs))
 
 	c := cron.New()
 	c.AddFunc("00 00 * * *", func() {
@@ -76,7 +78,27 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlerPictures(w http.ResponseWriter, r *http.Request) {
-	err := tmpl.ExecuteTemplate(w, pictures, nil)
+	conn := connectToDb(r.Context())
+	defer conn.Close(r.Context())
+
+	var paths []string
+	rows, err := conn.Query(r.Context(), "select path from pictures;")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	paths, err = pgx.CollectRows(rows, pgx.RowTo[string])
+	if err != nil {
+		http.Error(w, "Collecting rows: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = tmpl.ExecuteTemplate(w, pictures, struct {
+		Paths         []string
+		Home_page     string
+		Pictures_page string
+	}{paths, os.Getenv(home_page), os.Getenv(pictures_page)})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -138,10 +160,7 @@ func handlerSavePicture(w http.ResponseWriter, r *http.Request) {
 	}
 	cmd.Update()
 
-	err = tmpl.ExecuteTemplate(w, pictures, nil)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	http.Redirect(w, r, pictures_page, http.StatusSeeOther)
 }
 
 type Recipe struct {
