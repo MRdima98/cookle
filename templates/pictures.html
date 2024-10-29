@@ -1,7 +1,7 @@
 {{ template "head.html" .}}
-<div id="body" class="flex flex-col gap-5 items-center lg:w-8/12">
+<div id="body" class="relative flex flex-col gap-5 items-center lg:w-8/12">
     {{ template "header.html" .}}
-    <div class="flex flex-col justify-center items-center gap-3 lg:hidden">
+    <div class="flex flex-col justify-center items-center gap-3 lg:hidden mt-10">
         {{range $_, $path := .Paths}}
         <img src="{{$path}}" alt="food picture" class="w-1/2">
         <div class="flex w-1/2 justify-start">
@@ -10,9 +10,23 @@
         </div>
         {{end}}
     </div>
-    <form action="save_picture" method="post" enctype="multipart/form-data">
-        <input type="file" id="file" name="myFile" />
-        <button>save</button>
-    </form>
+    <div class="lg:grid lg:grid-cols-3 hidden mt-10">
+        {{range $_, $path := .Paths}}
+        <div class="flex flex-col items-center mt-8">
+            <img src="{{$path}}" alt="food picture" class="w-3/4">
+            <div class="flex w-1/2 justify-start">
+                <img src="./static/icons/like.svg" alt="food picture" width="24" height="24">
+                <span>12</span>
+            </div>
+        </div>
+        {{end}}
+    </div>
 </div>
+<form action="save_picture" method="post" enctype="multipart/form-data" class="sticky w-full bottom-8 flex justify-end">
+    <label for={{.Picture_upload}} class="mr-10 lg:mr-28">
+        <img src="./static/icons/camera.svg" alt="camera icon" width="72" height="72">
+    </label>
+    <input type="file" id="file" name={{.Picture_upload}} accept="images/*" capture="user" hidden />
+    <!--<button>save</button>-->
+</form>
 {{ template "footer.html" .}}

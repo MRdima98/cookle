@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inspiration&display=swap" rel="stylesheet">
     <script src="./static/js/index.js"></script>
+    {{if eq .Path "/pictures"}}
+    <script src="./static/js/pictures.js"></script>
+    {{end}}
 </head>
 
 <body class="bg-mainBg text-text flex flex-col items-center justify-between h-screen gap-5">

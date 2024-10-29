@@ -558,6 +558,18 @@ video {
   position: absolute;
 }
 
+.relative {
+  position: relative;
+}
+
+.sticky {
+  position: sticky;
+}
+
+.bottom-8 {
+  bottom: 2rem;
+}
+
 .right-0 {
   right: 0px;
 }
@@ -566,12 +578,20 @@ video {
   top: 0px;
 }
 
+.mr-10 {
+  margin-right: 2.5rem;
+}
+
 .mt-10 {
   margin-top: 2.5rem;
 }
 
 .mt-5 {
   margin-top: 1.25rem;
+}
+
+.mt-8 {
+  margin-top: 2rem;
 }
 
 .flex {
@@ -594,18 +614,6 @@ video {
   height: 100vh;
 }
 
-.h-24 {
-  height: 6rem;
-}
-
-.h-12 {
-  height: 3rem;
-}
-
-.h-6 {
-  height: 1.5rem;
-}
-
 .w-1\/2 {
   width: 50%;
 }
@@ -614,28 +622,12 @@ video {
   width: 83.333333%;
 }
 
+.w-3\/4 {
+  width: 75%;
+}
+
 .w-full {
   width: 100%;
-}
-
-.w-8\/12 {
-  width: 66.666667%;
-}
-
-.w-6\/12 {
-  width: 50%;
-}
-
-.w-24 {
-  width: 6rem;
-}
-
-.w-12 {
-  width: 3rem;
-}
-
-.w-6 {
-  width: 1.5rem;
 }
 
 .translate-x-80 {
@@ -663,6 +655,10 @@ video {
   justify-content: flex-start;
 }
 
+.justify-end {
+  justify-content: flex-end;
+}
+
 .justify-center {
   justify-content: center;
 }
@@ -685,10 +681,6 @@ video {
 
 .gap-5 {
   gap: 1.25rem;
-}
-
-.rounded-sm {
-  border-radius: 0.125rem;
 }
 
 .bg-mainBg {
@@ -759,6 +751,10 @@ video {
     visibility: hidden;
   }
 
+  .lg\:mr-28 {
+    margin-right: 7rem;
+  }
+
   .lg\:inline {
     display: inline;
   }
@@ -767,8 +763,8 @@ video {
     display: flex;
   }
 
-  .lg\:inline-flex {
-    display: inline-flex;
+  .lg\:grid {
+    display: grid;
   }
 
   .lg\:hidden {
@@ -781,6 +777,10 @@ video {
 
   .lg\:w-8\/12 {
     width: 66.666667%;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

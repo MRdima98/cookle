@@ -20,16 +20,18 @@ import (
 )
 
 const (
-	index         = "index.html"
-	pictures      = "pictures.html"
-	index_path    = "templates/index.html"
-	footer_path   = "templates/footer.html"
-	head_path     = "templates/head.html"
-	header_path   = "templates/header.html"
-	pictures_path = "templates/pictures.html"
-	url           = "DB_URL"
-	home_page     = "HOME_PAGE"
-	pictures_page = "PICTURES_PAGE"
+	index          = "index.html"
+	pictures       = "pictures.html"
+	index_path     = "templates/index.html"
+	footer_path    = "templates/footer.html"
+	head_path      = "templates/head.html"
+	header_path    = "templates/header.html"
+	pictures_path  = "templates/pictures.html"
+	url            = "DB_URL"
+	pictures_url   = "/pictures"
+	home_page      = "HOME_PAGE"
+	pictures_page  = "PICTURES_PAGE"
+	picture_upload = "PICTURES_UPLOAD"
 )
 
 var tmpl = template.Must(template.ParseFiles(
@@ -71,7 +73,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			Recipe        Recipe
 			Home_page     string
 			Pictures_page string
-		}{recipe, os.Getenv(home_page), os.Getenv(pictures_page)})
+			Path          string
+		}{
+			recipe,
+			os.Getenv(home_page),
+			os.Getenv(pictures_page),
+			r.URL.Path,
+		})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -81,6 +89,7 @@ func handlerPictures(w http.ResponseWriter, r *http.Request) {
 	conn := connectToDb(r.Context())
 	defer conn.Close(r.Context())
 
+	fmt.Println("PATH: ", r.URL.Path)
 	var paths []string
 	rows, err := conn.Query(r.Context(), "select path from pictures;")
 	if err != nil {
@@ -95,10 +104,18 @@ func handlerPictures(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = tmpl.ExecuteTemplate(w, pictures, struct {
-		Paths         []string
-		Home_page     string
-		Pictures_page string
-	}{paths, os.Getenv(home_page), os.Getenv(pictures_page)})
+		Paths          []string
+		Home_page      string
+		Pictures_page  string
+		Picture_upload string
+		Path           string
+	}{
+		paths,
+		os.Getenv(home_page),
+		os.Getenv(pictures_page),
+		picture_upload,
+		r.URL.Path,
+	})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -133,7 +150,7 @@ func handlerSavePicture(w http.ResponseWriter, r *http.Request) {
 
 	fileName := strconv.Itoa(fileId)
 
-	formFile, _, err := r.FormFile("myFile")
+	formFile, _, err := r.FormFile(picture_upload)
 	if err != nil {
 		http.Error(w, "Form file: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -160,7 +177,7 @@ func handlerSavePicture(w http.ResponseWriter, r *http.Request) {
 	}
 	cmd.Update()
 
-	http.Redirect(w, r, pictures_page, http.StatusSeeOther)
+	http.Redirect(w, r, pictures_url, http.StatusSeeOther)
 }
 
 type Recipe struct {
