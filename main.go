@@ -90,27 +90,42 @@ func handlerPictures(w http.ResponseWriter, r *http.Request) {
 	defer conn.Close(r.Context())
 
 	fmt.Println("PATH: ", r.URL.Path)
-	var paths []string
-	rows, err := conn.Query(r.Context(), "select path from pictures;")
+	type pictures_data struct {
+		paths     string
+		likes     int
+		usernames string
+	}
+	rows, err := conn.Query(r.Context(), "select l.thumbs_up, p.path, u.username from likes l left join pictures p ON l.picture_id = p.id left join users u on l.user_id = u.id;")
+	// select l.thumbs_up, p.path, u.username from likes l left join pictures p ON l.picture_id = p.id left join users u on l.user_id = u.id;
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	paths, err = pgx.CollectRows(rows, pgx.RowTo[string])
+	var datas pictures_data
+
+	err = rows.Scan(&datas.paths, &datas.likes, &datas.usernames)
+	fmt.Println("datas:", datas)
+	if err != nil {
+		http.Error(w, "Trial: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	data, err := pgx.CollectRows(rows, pgx.RowTo[pictures_data])
 	if err != nil {
 		http.Error(w, "Collecting rows: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = tmpl.ExecuteTemplate(w, pictures, struct {
-		Paths          []string
+		Data           []pictures_data
 		Home_page      string
 		Pictures_page  string
 		Picture_upload string
 		Path           string
 	}{
-		paths,
+		data,
 		os.Getenv(home_page),
 		os.Getenv(pictures_page),
 		picture_upload,

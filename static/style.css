@@ -723,6 +723,10 @@ video {
   background-color: rgb(69 10 10 / var(--tw-bg-opacity));
 }
 
+.stroke-red-950 {
+  stroke: #450a0a;
+}
+
 .text-2xl {
   font-size: 1.5rem;
   line-height: 2rem;
